@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa de Preferências</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #setores, #selecionados {
+            list-style: none; padding: 0; margin: 20px auto;
+            width: 300px; border: 1px solid #ccc; min-height: 50px;
+        }
+        li {
+            padding: 10px; margin: 5px; background: #f4f4f4;
+            cursor: grab; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Pesquisa de Preferências</h2>
+    <p>Arraste os setores para ordenar suas preferências.</p>
+
+    <ul id="setores">
+        <li>Financeiro</li>
+        <li>RH</li>
+        <li>TI</li>
+        <li>Comercial</li>
+        <li>Marketing</li>
+        <li>Jurídico</li>
+        <li>Operacional</li>
+        <li>Logística</li>
+        <li>Pesquisa e Desenvolvimento</li>
+        <li>Atendimento</li>
+    </ul>
+
+    <h3>Minha Ordem de Preferência</h3>
+    <ul id="selecionados"></ul>
+
+    <button onclick="salvarPreferencias()">Salvar</button>
+
+    <script>
+        const setores = document.getElementById("setores");
+        const selecionados = document.getElementById("selecionados");
+
+        // Permite arrastar os setores disponíveis
+        Sortable.create(setores, {
+            group: "setores",
+            animation: 150
+        });
+
+        // Permite ordenar os setores escolhidos
+        Sortable.create(selecionados, {
+            group: "setores",
+            animation: 150
+        });
+
+        function salvarPreferencias() {
+            const preferencias = Array.from(selecionados.children).map((item, index) => ({
+                ordem: index + 1,
+                setor: item.textContent
+            }));
+
+            console.log("Preferências salvas:", preferencias);
+            alert("Preferências salvas com sucesso! Veja o console para os detalhes.");
+        }
+    </script>
+
+</body>
+</html>
