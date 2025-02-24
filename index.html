@@ -3,67 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pesquisa de Preferências</title>
+    <title>Login e Preferências</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
-        #setores, #selecionados {
-            list-style: none; padding: 0; margin: 20px auto;
-            width: 300px; border: 1px solid #ccc; min-height: 50px;
-        }
-        li {
-            padding: 10px; margin: 5px; background: #f4f4f4;
-            cursor: grab; border-radius: 5px;
-        }
+        .hidden { display: none; }
+        #loginForm, #preferencias { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; }
+        ul { list-style: none; padding: 0; margin: 20px auto; width: 300px; border: 1px solid #ccc; min-height: 50px; }
+        li { padding: 10px; margin: 5px; background: #f4f4f4; cursor: grab; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-    <h2>Pesquisa de Preferências</h2>
-    <p>Arraste os setores para ordenar suas preferências.</p>
+    <div id="loginForm">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Email">
+        <input type="password" id="password" placeholder="Senha">
+        <button onclick="login()">Entrar</button>
+        <p id="loginMessage"></p>
+    </div>
 
-    <ul id="setores">
-        <li>Financeiro</li>
-        <li>RH</li>
-        <li>TI</li>
-        <li>Comercial</li>
-        <li>Marketing</li>
-        <li>Jurídico</li>
-        <li>Operacional</li>
-        <li>Logística</li>
-        <li>Pesquisa e Desenvolvimento</li>
-        <li>Atendimento</li>
-    </ul>
+    <div id="preferencias" class="hidden">
+        <h2>Seleção de Preferências</h2>
+        <p>Arraste os setores para ordenar sua preferência.</p>
+        <ul id="setores">
+            <li>Financeiro</li>
+            <li>RH</li>
+            <li>TI</li>
+            <li>Comercial</li>
+            <li>Marketing</li>
+            <li>Jurídico</li>
+            <li>Operacional</li>
+            <li>Logística</li>
+            <li>P&D</li>
+            <li>Atendimento</li>
+        </ul>
 
-    <h3>Minha Ordem de Preferência</h3>
-    <ul id="selecionados"></ul>
+        <h3>Minha Ordem de Preferência</h3>
+        <ul id="selecionados"></ul>
 
-    <button onclick="salvarPreferencias()">Salvar</button>
+        <button onclick="salvarPreferencias()">Salvar Preferências</button>
+        <p id="saveMessage"></p>
+    </div>
 
     <script>
-        const setores = document.getElementById("setores");
-        const selecionados = document.getElementById("selecionados");
+        let token = null;
 
-        // Permite arrastar os setores disponíveis
-        Sortable.create(setores, {
-            group: "setores",
-            animation: 150
-        });
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
 
-        // Permite ordenar os setores escolhidos
-        Sortable.create(selecionados, {
-            group: "setores",
-            animation: 150
-        });
+            fetch("http://localhost:3000/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    token = data.token;
+                    document.getElementById("loginForm").classList.add("hidden");
+                    document.getElementById("preferencias").classList.remove("hidden");
+                } else {
+                    document.getElementById("loginMessage").textContent = "Erro: " + data.message;
+                }
+            })
+            .catch(error => console.error("Erro:", error));
+        }
+
+        Sortable.create(document.getElementById("setores"), { group: "setores", animation: 150 });
+        Sortable.create(document.getElementById("selecionados"), { group: "setores", animation: 150 });
 
         function salvarPreferencias() {
-            const preferencias = Array.from(selecionados.children).map((item, index) => ({
+            if (!token) {
+                alert("Usuário não autenticado!");
+                return;
+            }
+
+            const preferencias = Array.from(document.getElementById("selecionados").children).map((item, index) => ({
                 ordem: index + 1,
                 setor: item.textContent
             }));
 
-            console.log("Preferências salvas:", preferencias);
-            alert("Preferências salvas com sucesso! Veja o console para os detalhes.");
+            fetch("http://localhost:3000/api/preferencias", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` // Enviando o token
+                },
+                body: JSON.stringify(preferencias)
+            })
+            .then(response => response.json())
+            .then(data => document.getElementById("saveMessage").textContent = data.message)
+            .catch(error => console.error("Erro ao salvar:", error));
         }
     </script>
 
